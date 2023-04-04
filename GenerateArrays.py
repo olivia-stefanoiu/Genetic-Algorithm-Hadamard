@@ -1,17 +1,23 @@
-def create_coordinates_mat(iterator, size, population):
-    array = []
+import itertools
+
+import numpy as np
+
+
+def create_coordinates_mat(size, population):
+    square_side = int(np.sqrt(len(population[0].genes)))
+
     coord = []
-    aux = []
     x = 0
-    for i in range(pow(iterator, 2)):
+
+    for i in range(square_side):
         x = x + size
         y = 0
-        for j in range(iterator):
+        for j in range(square_side):
             coord.append((x, y))
             y = y + size
 
-    for i in range(len(population)):
-        aux.append(zip(coord, population[i]))
-
-    return aux
-
+    return [  #How to format nestedd list comprehensions?
+        [(coord[i][0], coord[i][1], chromo.genes[i])
+         for i in range(len(chromo.genes))]
+        for chromo in population
+    ]
