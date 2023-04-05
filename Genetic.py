@@ -11,7 +11,7 @@ NUMBER_GENERATIONS = 2
 
 class Chromosome:
     MUTATION_PROBABILITY = 0.001
-    GENES = [5, 12]
+    GENES = [3, 4]
 
     def __init__(self, initial_genes=None):
         self.genes = initial_genes if initial_genes is not None else np.array(
@@ -26,7 +26,7 @@ class Chromosome:
 
     # def newGeneration(self, iterator):
     #     global chromosome_size
-    #     new_genes = np.array([5] * chromosome_size)
+    #     new_genes = np.array([none] * chromosome_size)
     #     nr = 0
     #     i = 0
     #     while i < chromosome_size:
@@ -79,7 +79,7 @@ class Chromosome:
 class GeneticAlgorithm:
     Target_x = 0.5
     Target_y = 0.5
-    POPULATION_SIZE = 100
+    POPULATION_SIZE = 10
     @staticmethod
     def _get_initial_generation(population_size):
         return [Chromosome() for _ in range(population_size)]
