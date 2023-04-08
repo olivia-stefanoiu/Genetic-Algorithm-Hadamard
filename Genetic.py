@@ -6,12 +6,10 @@ from GenerateArrays import create_coordinates_mat
 
 CHROMOSOME_SIZE = 4
 INITIAL_CROMO_SIZE = 4
-NUMBER_GENERATIONS = 2
-
 
 class Chromosome:
     MUTATION_PROBABILITY = 0.001
-    GENES = [3, 4]
+    GENES = [5, 7.5]
 
     def __init__(self, initial_genes=None):
         self.genes = initial_genes if initial_genes is not None else np.array(
@@ -164,6 +162,6 @@ class GeneticAlgorithm:
 
 # split_cell_test()
 #TODO: add sort, and fitness for each generation
-algo = GeneticAlgorithm()
-for i in range(3):
-    algo.advance_generation()
+# algo = GeneticAlgorithm()
+# for i in range(3):
+#     algo.advance_generation()
