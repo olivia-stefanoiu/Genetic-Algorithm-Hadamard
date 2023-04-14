@@ -8,6 +8,7 @@ numpy = "*"
 meep = "*"
 h5py = "*"
 matplotlib = "*"
+materials = "*"
 
 [dev-packages]
 
