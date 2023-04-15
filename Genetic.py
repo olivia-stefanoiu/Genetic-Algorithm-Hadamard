@@ -11,7 +11,7 @@ INITIAL_CROMO_SIZE = 4
 
 class Chromosome:
     MUTATION_PROBABILITY = 0.001
-    GENES = [4.8, 8]
+    GENES = [2.25, 2.62]
 
     def __init__(self, initial_genes=None):
         self.genes = initial_genes if initial_genes is not None else np.array(
@@ -35,7 +35,6 @@ class Chromosome:
         if (sum_x > sum_y):
             sum_x, sum_y = sum_y, sum_x
         self.fitness = sum_x / sum_y
-
 
     # def newGeneration(self, iterator):
     #     global chromosome_size
@@ -92,7 +91,7 @@ class Chromosome:
 class GeneticAlgorithm:
     Target_x = 0.5
     Target_y = 0.5
-    POPULATION_SIZE = 100
+    POPULATION_SIZE = 1000
 
     @staticmethod
     def _get_initial_generation(population_size):
@@ -107,13 +106,9 @@ class GeneticAlgorithm:
         self.population = GeneticAlgorithm._get_initial_generation(
             self.population_size) if population is None else population
         self.generation = generation
-        self.sourceFile = open('demo.txt', 'w')
         self.fitness_strategy = SimulationStrategy() if (fitness_strategy is None) else fitness_strategy
         self.square_length = 32
-
-    def __del__(self):
-        self.sourceFile.close()
-
+        self.CROSSOVERS = [10, 20, 50, 100]
 
     def _get_percentage(self):  # calculating the fitness percentages
         fitness = [chromo.fitness for chromo in self.population]
@@ -127,8 +122,7 @@ class GeneticAlgorithm:
         result = []
         for i in range(len(relative_fitnesses)):
             probability.extend([i] * int(relative_fitnesses[
-                                             i] * precision_factor))  # [i] array with a single element i, *number of times to repeat
-        print(probability)
+                                             i] * precision_factor))
 
         for i in range(self.population_size):
             rand = random.randrange(len(probability))
@@ -138,9 +132,11 @@ class GeneticAlgorithm:
 
     def save_fitness(self):
         fitness = [chromo.fitness for chromo in self.population]
-        self.sourceFile.write(str(fitness))
-        self.sourceFile.write("\n")
-        self.sourceFile.flush()
+        sourceFile = open("fitness.txt", "w")
+        sourceFile.write(str(fitness))
+        sourceFile.write("\n")
+        sourceFile.flush()
+        sourceFile.close()
 
     def _update_population_fitness(self):
         ex_data_list, ey_data_list = self.fitness_strategy.run_simulation(self.generation, self.population,
@@ -157,10 +153,10 @@ class GeneticAlgorithm:
 
         # precision_factor = self._get_precision_factor()
 
-        for i in range(10):
+        for i in range(self.CROSSOVERS[self.generation - 2]):
 
-            self.population = sorted(self.population, key=lambda x: x.fitness)
-            crossover_cand = self._crossover_candidates(self.population_size*10)
+            # self.population = sorted(self.population, key=lambda x: x.fitness)
+            crossover_cand = self._crossover_candidates(self.population_size * 10)
 
             for i in range(0, self.population_size, 2):
                 Chromosome.crossover(crossover_cand[i], crossover_cand[i + 1])
@@ -169,7 +165,7 @@ class GeneticAlgorithm:
 
             self.population = crossover_cand  # eliminate the worst chromosomes
 
-            self._update_population_fitness() #run simulation
+            self._update_population_fitness()  # run simulation
 
         self.generation = self.generation + 1
         exponent = 2 * (self.generation - 1)
@@ -177,10 +173,7 @@ class GeneticAlgorithm:
 
         for i in range(self.population_size):
             self.population[i].split_cells(self.chromo_size, self.generation)
-            # print(self.population[i].genes)
 
             # aux[i].newGeneration(iterator) experiencing mathematical issues
-            # print(aux[i].genes)
 
         self.square_length = self.square_length / 2
-
