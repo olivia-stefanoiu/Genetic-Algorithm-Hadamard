@@ -19,6 +19,10 @@ class Chromosome:
         self.fitness = -math.inf
 
     def calculate_fitness(self, ex_data, ey_data):
+        # print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        # print(ex_data)
+        # print("------------------------------------------------------")
+        # print(ey_data)
         sum_x = 0
         sum_y = 0
         for i in range(len(ex_data)):
@@ -28,15 +32,10 @@ class Chromosome:
 
         # Filter elements lower than 0.5
         # ex_data = np.array([x for x in ex_data if x > 0.5])
-        if (sum_x < sum_y):
+        if (sum_x > sum_y):
             sum_x, sum_y = sum_y, sum_x
         self.fitness = sum_x / sum_y
 
-    # def get_fitness(self):
-    #     # fitness = 0.5 - (Target_x - polarisation_x) + 0.5 - (Target_y - polarization_y)
-    #     # TODO: Calculate fitness
-    #     # return np.random.uniform(0.01, 0.98)
-    #     return random.uniform(0.01, 0.98)
 
     # def newGeneration(self, iterator):
     #     global chromosome_size
@@ -102,6 +101,7 @@ class GeneticAlgorithm:
     def __init__(self, population_size=POPULATION_SIZE, chromo_size=CHROMOSOME_SIZE,
                  population: list[Chromosome] = None,
                  generation=2, fitness_strategy=None):
+
         self.population_size = population_size
         self.chromo_size = chromo_size
         self.population = GeneticAlgorithm._get_initial_generation(
@@ -114,33 +114,6 @@ class GeneticAlgorithm:
     def __del__(self):
         self.sourceFile.close()
 
-    # def calculate_percentage(self, number, total):#TODO integrate the squared of components integral
-    #     print(number, " ", total)
-    #     percentage = (number / total) * 100
-    #     return percentage
-
-    # def _calculate_fitness(self, chromosome, x_polarisation, y_polarisation):
-    #     for i in range(len(x_polarisation)):
-    #         for j in range(len(x_polarisation[0])):
-    #             perc_x = self.calculate_percentage(x_polarisation[i][j],
-    #                                                abs(abs((x_polarisation[i][j])) - abs(y_polarisation[i][j])))
-    #             perc_y = self.calculate_percentage(y_polarisation[i][j],
-    #                                                abs((abs(y_polarisation[i][j]) - abs(x_polarisation[i][j]))))
-    #
-    #             if 0.000001 < abs(x_polarisation[i][j]) and abs(x_polarisation[i][j]) < 0.000009 and \
-    #                     0.000001 < abs(y_polarisation[i][j]) and abs(y_polarisation[i][j]) < 0.000009 and \
-    #                     perc_x < 5 and perc_y < 5:
-    #                 chromosome.fitness = (perc_y + perc_x) / 2
-    #                 # print(chromosome.fitness, " ", x_polarisation[i][j], " ", y_polarisation[i][j])
-
-    def _get_precision_factor(self):  # calculate the amount to multiply to get
-        populationSize = self.population_size
-        aux = populationSize
-        nr = 0
-        while aux > 9:
-            aux = aux / 10
-            nr = nr + 1
-        return pow(10, nr)
 
     def _get_percentage(self):  # calculating the fitness percentages
         fitness = [chromo.fitness for chromo in self.population]
@@ -150,12 +123,13 @@ class GeneticAlgorithm:
 
     def _crossover_candidates(self, precision_factor: int):
         relative_fitnesses = self._get_percentage()
-        print(relative_fitnesses)
         probability = []
         result = []
         for i in range(len(relative_fitnesses)):
             probability.extend([i] * int(relative_fitnesses[
                                              i] * precision_factor))  # [i] array with a single element i, *number of times to repeat
+        print(probability)
+
         for i in range(self.population_size):
             rand = random.randrange(len(probability))
             chromosomes = self.population[probability[rand]]
@@ -181,12 +155,12 @@ class GeneticAlgorithm:
             # First time we run the algorithm, need to init the fitness
             self._update_population_fitness()
 
-        precision_factor = self._get_precision_factor()
+        # precision_factor = self._get_precision_factor()
 
-        for i in range(20):
+        for i in range(10):
 
             self.population = sorted(self.population, key=lambda x: x.fitness)
-            crossover_cand = self._crossover_candidates(precision_factor)
+            crossover_cand = self._crossover_candidates(self.population_size*10)
 
             for i in range(0, self.population_size, 2):
                 Chromosome.crossover(crossover_cand[i], crossover_cand[i + 1])
@@ -195,11 +169,8 @@ class GeneticAlgorithm:
 
             self.population = crossover_cand  # eliminate the worst chromosomes
 
-            self._update_population_fitness()
-            # print([c.fitness for c in crossover_cand])
-            # print([c.genes for c in crossover_cand])
+            self._update_population_fitness() #run simulation
 
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa")
         self.generation = self.generation + 1
         exponent = 2 * (self.generation - 1)
         self.chromo_size = pow(2, exponent)
@@ -211,8 +182,5 @@ class GeneticAlgorithm:
             # aux[i].newGeneration(iterator) experiencing mathematical issues
             # print(aux[i].genes)
 
-        # calculate the number of chromosomes on a row
-
         self.square_length = self.square_length / 2
 
-# print([c.genes for c in population])
