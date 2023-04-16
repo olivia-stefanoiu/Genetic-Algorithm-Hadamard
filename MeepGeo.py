@@ -38,12 +38,8 @@ def run_sim_paralel(square_length, coord_mat_array, j, q):
 
     ex_data = sim.get_array(center=mp.Vector3(32.5, 0), size=nonpml_vol, component=mp.Ex)
     ey_data = sim.get_array(center=mp.Vector3(32.5, 0), size=nonpml_vol, component=mp.Ey)
-    #l.acquire()
-    #try:
-    q.put((ex_data, ey_data, j))
-   # finally:
-        #l.release()
 
+    q.put((ex_data, ey_data, j))
 
 
 class SimulationStrategy:
@@ -55,24 +51,19 @@ class SimulationStrategy:
     def run_simulation(self, generation, population, square_length):
         coord_mat_array, self.coord_array = \
             GenerateArrays.create_coordinates_mat(self.coord_array, population, generation)
-        # print(self.coord_array)
 
         ex_data_list = [0 for i in range(len(population))]
         ey_data_list = [0 for i in range(len(population))]
 
         process_list = []
-        i = 0
-
         ctx = multiprocessing.get_context('fork')
         q = ctx.Queue()
-        #l = ctx.Lock()
 
         for j in range(len(population)):
 
             p = ctx.Process(target=run_sim_paralel,
                                         args=(square_length, coord_mat_array, j, q))
             p.start()
-            #time.sleep(0.01)
             process_list.append(p)
 
         for i in range(len(population)):
@@ -80,7 +71,7 @@ class SimulationStrategy:
             ex_data_list[j] = ex_data
             ey_data_list[j] = ey_data
 
-
         for p in process_list:
             p.join()
+
         return ex_data_list, ey_data_list

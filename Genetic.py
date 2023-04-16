@@ -1,5 +1,6 @@
 import copy
 import math
+import multiprocessing
 import secrets
 import random
 import numpy as np
@@ -7,6 +8,18 @@ from MeepGeo import SimulationStrategy
 
 CHROMOSOME_SIZE = 4
 INITIAL_CROMO_SIZE = 4
+
+
+def mutation(chromosome, q):
+    for i in range(len(chromosome.genes)):
+        prob = random.uniform(0, 1)
+        if prob <= Chromosome.MUTATION_PROBABILITY:
+            if chromosome.genes[i] == 2.25:
+                chromosome.genes[i] = 2.62
+            else:
+                chromosome.genes[i] = 2.25
+    q.put(chromosome)
+    print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBb")
 
 
 class Chromosome:
@@ -19,20 +32,15 @@ class Chromosome:
         self.fitness = -math.inf
 
     def calculate_fitness(self, ex_data, ey_data):
-        # print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-        # print(ex_data)
-        # print("------------------------------------------------------")
-        # print(ey_data)
         sum_x = 0
         sum_y = 0
         for i in range(len(ex_data)):
             for j in range(len(ex_data[i])):
                 sum_x += pow(ex_data[i][j], 2)
                 sum_y += pow(ey_data[i][j], 2)
-
         # Filter elements lower than 0.5
         # ex_data = np.array([x for x in ex_data if x > 0.5])
-        if (sum_x > sum_y):
+        if sum_x > sum_y:
             sum_x, sum_y = sum_y, sum_x
         self.fitness = sum_x / sum_y
 
@@ -70,13 +78,6 @@ class Chromosome:
 
         self.genes = new_genes
 
-    def mutation(self):
-        for i in range(len(self.genes)):
-            prob = random.uniform(0, 1)
-            if prob <= Chromosome.MUTATION_PROBABILITY:
-                # we have only 2 values at the moment, so I just flip the value, else I use random choice
-                self.genes[i] = not self.genes[i]
-
     @staticmethod
     def crossover(chromosome_one, chromosome_two):
 
@@ -91,7 +92,7 @@ class Chromosome:
 class GeneticAlgorithm:
     Target_x = 0.5
     Target_y = 0.5
-    POPULATION_SIZE = 1000
+    POPULATION_SIZE = 100
 
     @staticmethod
     def _get_initial_generation(population_size):
@@ -109,12 +110,16 @@ class GeneticAlgorithm:
         self.fitness_strategy = SimulationStrategy() if (fitness_strategy is None) else fitness_strategy
         self.square_length = 32
         self.CROSSOVERS = [10, 20, 50, 100]
+        self.sourceFile = open("fitness_100.txt", "w")
+
+    def __del__(self):
+        self.sourceFile.close()
 
     def _get_percentage(self):  # calculating the fitness percentages
         fitness = [chromo.fitness for chromo in self.population]
-        sum = np.sum(fitness)
+        suma = np.sum(fitness)
 
-        return [fit / sum for fit in fitness]
+        return [fit / suma for fit in fitness]
 
     def _crossover_candidates(self, precision_factor: int):
         relative_fitnesses = self._get_percentage()
@@ -132,11 +137,9 @@ class GeneticAlgorithm:
 
     def save_fitness(self):
         fitness = [chromo.fitness for chromo in self.population]
-        sourceFile = open("fitness.txt", "w")
-        sourceFile.write(str(fitness))
-        sourceFile.write("\n")
-        sourceFile.flush()
-        sourceFile.close()
+        self.sourceFile.write(str(fitness))
+        self.sourceFile.write("\n")
+        self.sourceFile.flush()
 
     def _update_population_fitness(self):
         ex_data_list, ey_data_list = self.fitness_strategy.run_simulation(self.generation, self.population,
@@ -146,25 +149,31 @@ class GeneticAlgorithm:
 
     def advance_generation(self):
 
-        # Init the fitness if needed
+        ctx_mut = multiprocessing.get_context('fork')
+        q_mut = ctx_mut.Queue()
+        process_list_mut = []
+
         if self.population[0].fitness == -math.inf:
-            # First time we run the algorithm, need to init the fitness
             self._update_population_fitness()
 
-        # precision_factor = self._get_precision_factor()
-
-        for i in range(self.CROSSOVERS[self.generation - 2]):
-
+        for j in range(self.CROSSOVERS[self.generation - 2]):
             # self.population = sorted(self.population, key=lambda x: x.fitness)
             crossover_cand = self._crossover_candidates(self.population_size * 10)
 
             for i in range(0, self.population_size, 2):
                 Chromosome.crossover(crossover_cand[i], crossover_cand[i + 1])
+            print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa")
             for i in range(self.population_size):
-                crossover_cand[i].mutation()
-
+                p_mut = ctx_mut.Process(target=mutation, args=(crossover_cand[i], q_mut))
+                p_mut.start()
+                process_list_mut.append(p_mut)
+            print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
+            for i in range(self.population_size):
+                crossover_cand[i] = q_mut.get()
+            for p_mut in process_list_mut:
+                p_mut.join()
+            print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDdd")
             self.population = crossover_cand  # eliminate the worst chromosomes
-
             self._update_population_fitness()  # run simulation
 
         self.generation = self.generation + 1
