@@ -3,6 +3,7 @@ import numpy as np
 COORD_FACTORS = [8, 4, 2, 1]
 GEN = 2
 
+
 def create_coordinates_mat(coord_array, population, generation):
     square_side = int(np.sqrt(len(population[0].genes)))
     global GEN
@@ -10,18 +11,18 @@ def create_coordinates_mat(coord_array, population, generation):
 
     if GEN != generation:
         GEN = generation
-        for i in range(int((len(population[0].genes)/4))):
-            coord.append((coord_array[i][0] - COORD_FACTORS[generation-3],
-                          coord_array[i][1] - COORD_FACTORS[generation-3]))
+        for i in range(int((len(population[0].genes) / 4))):
+            coord.append((coord_array[i][0] - COORD_FACTORS[generation - 3],
+                          coord_array[i][1] - COORD_FACTORS[generation - 3]))
 
-            coord.append((coord_array[i][0] + COORD_FACTORS[generation-3],
-                          coord_array[i][1] - COORD_FACTORS[generation-3]))
+            coord.append((coord_array[i][0] + COORD_FACTORS[generation - 3],
+                          coord_array[i][1] - COORD_FACTORS[generation - 3]))
 
-            coord.append((coord_array[i][0] - COORD_FACTORS[generation-3],
-                          coord_array[i][1] + COORD_FACTORS[generation-3]))
+            coord.append((coord_array[i][0] - COORD_FACTORS[generation - 3],
+                          coord_array[i][1] + COORD_FACTORS[generation - 3]))
 
-            coord.append((coord_array[i][0] + COORD_FACTORS[generation-3],
-                          coord_array[i][1] + COORD_FACTORS[generation-3]))
+            coord.append((coord_array[i][0] + COORD_FACTORS[generation - 3],
+                          coord_array[i][1] + COORD_FACTORS[generation - 3]))
 
 
     else:

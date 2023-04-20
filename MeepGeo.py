@@ -8,9 +8,9 @@ import GenerateArrays
 import multiprocessing
 
 
-# TODO send code
 def run_sim_paralel(square_length, coord_mat_array, j, q):
-    cells = mp.Vector3(100, 100, 0)
+
+    cells = mp.Vector3(85, 80, 0)
     pml_layers = [mp.PML(1.0)]
 
     central_freq = 0.153  # pulse center frequency
@@ -26,6 +26,18 @@ def run_sim_paralel(square_length, coord_mat_array, j, q):
                          material=mp.Medium(epsilon=index))
                 for xi, yi, index in coord_mat_array[j]]
 
+    geometry.append(mp.Block(mp.Vector3(10, 4, 0),
+                             center=mp.Vector3(-37, 0, 0),
+                             material=mp.Medium(epsilon=2.62)))
+
+    geometry.append(mp.Block(mp.Vector3(10, 30, 0),
+                             center=mp.Vector3(-37, -17, 0),
+                             material=mp.Medium(epsilon=mp.inf)))
+
+    geometry.append(mp.Block(mp.Vector3(10, 30, 0),
+                             center=mp.Vector3(-37, 17, 0),
+                             material=mp.Medium(epsilon=mp.inf)))
+
     sim = mp.Simulation(cell_size=cells,
                         boundary_layers=pml_layers,
                         geometry=geometry,
@@ -38,13 +50,8 @@ def run_sim_paralel(square_length, coord_mat_array, j, q):
 
     ex_data = sim.get_array(center=mp.Vector3(32.5, 0), size=nonpml_vol, component=mp.Ex)
     ey_data = sim.get_array(center=mp.Vector3(32.5, 0), size=nonpml_vol, component=mp.Ey)
-    #l.acquire()
-    #try:
+
     q.put((ex_data, ey_data, j))
-   # finally:
-        #l.release()
-
-
 
 class SimulationStrategy:
 
@@ -55,7 +62,6 @@ class SimulationStrategy:
     def run_simulation(self, generation, population, square_length):
         coord_mat_array, self.coord_array = \
             GenerateArrays.create_coordinates_mat(self.coord_array, population, generation)
-        # print(self.coord_array)
 
         ex_data_list = [0 for i in range(len(population))]
         ey_data_list = [0 for i in range(len(population))]
@@ -65,21 +71,17 @@ class SimulationStrategy:
 
         ctx = multiprocessing.get_context('fork')
         q = ctx.Queue()
-        #l = ctx.Lock()
 
         for j in range(len(population)):
-
             p = ctx.Process(target=run_sim_paralel,
-                                        args=(square_length, coord_mat_array, j, q))
+                            args=(square_length, coord_mat_array, j, q))
             p.start()
-            #time.sleep(0.01)
             process_list.append(p)
 
         for i in range(len(population)):
             ex_data, ey_data, j = q.get()
             ex_data_list[j] = ex_data
             ey_data_list[j] = ey_data
-
 
         for p in process_list:
             p.join()
