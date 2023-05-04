@@ -9,32 +9,31 @@ import multiprocessing
 
 
 def run_sim_paralel(square_length, coord_mat_array, j, q):
-
-    cells = mp.Vector3(85, 80, 0)
+    cells = mp.Vector3(85, 80, 4)
     pml_layers = [mp.PML(1.0)]
 
     central_freq = 0.153  # pulse center frequency
     pulse_width = 0.11  # pulse width (in frequency)
     sources = [mp.Source(mp.GaussianSource(central_freq, fwidth=pulse_width),
-                         component=mp.Ex,
+                         component=mp.Ez,
                          center=mp.Vector3(-37, 0, 0),
                          size=mp.Vector3(0, 4, 0))]
     resolution = 1
 
-    geometry = [mp.Block(mp.Vector3(square_length, square_length, 0),
+    geometry = [mp.Block(mp.Vector3(square_length, square_length, 1),
                          center=mp.Vector3(xi, yi, 0),
                          material=mp.Medium(epsilon=index))
                 for xi, yi, index in coord_mat_array[j]]
 
-    geometry.append(mp.Block(mp.Vector3(10, 4, 0),
+    geometry.append(mp.Block(mp.Vector3(10, 4, 1),
                              center=mp.Vector3(-37, 0, 0),
                              material=mp.Medium(epsilon=2.62)))
 
-    geometry.append(mp.Block(mp.Vector3(10, 30, 0),
+    geometry.append(mp.Block(mp.Vector3(10, 30, 1),
                              center=mp.Vector3(-37, -17, 0),
                              material=mp.Medium(epsilon=mp.inf)))
 
-    geometry.append(mp.Block(mp.Vector3(10, 30, 0),
+    geometry.append(mp.Block(mp.Vector3(10, 30, 1),
                              center=mp.Vector3(-37, 17, 0),
                              material=mp.Medium(epsilon=mp.inf)))
 
@@ -44,14 +43,24 @@ def run_sim_paralel(square_length, coord_mat_array, j, q):
                         sources=sources,
                         resolution=resolution)
 
+
+
     sim.run(until=170)
 
-    nonpml_vol = mp.Vector3(1, 64)
+    nonpml_vol = mp.Vector3(1, 64, 1)
 
     ex_data = sim.get_array(center=mp.Vector3(32.5, 0), size=nonpml_vol, component=mp.Ex)
     ey_data = sim.get_array(center=mp.Vector3(32.5, 0), size=nonpml_vol, component=mp.Ey)
 
+    eps_data = sim.get_array(center=mp.Vector3(), size=cells, component=mp.Dielectric)
+    # plt.imshow(eps_data.transpose(), interpolation='spline36', cmap='binary')
+    # plt.imshow(ex_data.transpose(), interpolation='spline36', cmap='RdBu', alpha=0.9)
+    # plt.imshow(ey_data.transpose(), interpolation='spline36', cmap='RdBu', alpha=0.9)
+    # plt.axis('off')
+    # plt.show()
+
     q.put((ex_data, ey_data, j))
+
 
 class SimulationStrategy:
 

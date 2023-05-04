@@ -24,8 +24,9 @@ class Chromosome:
         sum_y = 0
         for i in range(len(ex_data)):
             for j in range(len(ex_data[i])):
-                sum_x += pow(ex_data[i][j], 2)
-                sum_y += pow(ey_data[i][j], 2)
+                for k in range(len(ex_data[i][j])):
+                    sum_x += pow(ex_data[i][j][k], 2)
+                    sum_y += pow(ey_data[i][j][k], 2)
 
         # Filter elements lower than 0.5
         # ex_data = np.array([x for x in ex_data if x > 0.5])
@@ -60,7 +61,7 @@ class Chromosome:
 
     @staticmethod
     def crossover(chromosome_one, chromosome_two):
-
+#TODO add crossover on intervals
         chromosome_size = len(chromosome_one.genes)
         secret = secrets.choice(range(chromosome_size - 1))
         for i in range(secret, chromosome_size):
@@ -70,7 +71,7 @@ class Chromosome:
 
 
 class GeneticAlgorithm:
-    POPULATION_SIZE = 10
+    POPULATION_SIZE = 10 #TODO why on earth is this attribute alone here?
 
     @staticmethod
     def _get_initial_generation(population_size):
@@ -87,8 +88,8 @@ class GeneticAlgorithm:
         self.generation = generation
         self.fitness_strategy = SimulationStrategy() if (fitness_strategy is None) else fitness_strategy
         self.square_length = 32
-        self.CROSSOVERS = [10, 20, 50, 100]
-        self.sourceFile = open("Pop10(7).txt", "w")
+        self.CROSSOVERS = [10, 15, 20,40]
+        self.sourceFile = open("aux3.txt", "w")
 
     def __del__(self):
         self.sourceFile.close()
